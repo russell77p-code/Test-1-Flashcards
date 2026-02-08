@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Service Test & Flashcard Study</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .mode-btn.active {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            box-shadow: 0 5px 20px rgba(255,107,53,0.4);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Quiz Mode Styles */
+        .quiz-container {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #f7931e);
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .question {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .blank {
+            border-bottom: 3px solid #ff6b35;
+            padding: 0 5px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            padding: 18px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.05em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            border-color: #ff6b35;
+            background: #fff5f2;
+            transform: translateX(5px);
+        }
+
+        .option-btn.selected-correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .option-btn.selected-incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .option-btn.show-correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+            animation: pulse 0.5s ease;
+        }
+
+        .option-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #ff6b35;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .option-btn.selected-correct .option-letter,
+        .option-btn.show-correct .option-letter {
+            background: #28a745;
+        }
+
+        .option-btn.selected-incorrect .option-letter {
+            background: #dc3545;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-container {
+            perspective: 1000px;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-number {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .flashcard-question {
+            font-size: 1.4em;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .flashcard-answer {
+            font-size: 1.5em;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .flashcard-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Deck Management */
+        .deck-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .deck-tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .deck-tab:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .deck-tab.active {
+            background: #ff6b35;
+        }
+
+        .deck-tab .count {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-know {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-unsure {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-dont-know {
+            background: #dc3545;
+            color: white;
+        }
+
+        .study-complete {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            color: #333;
+            display: none;
+        }
+
+        .study-complete h2 {
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .chapter-filter {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chapter-select {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            font-size: 1em;
+            background: rgba(255,255,255,0.9);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .flashcard {
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .mode-btn {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .option-btn {
+                padding: 14px 16px;
+                font-size: 0.95em;
+            }
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .start-screen p {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .feature-list {
+            text-align: left;
+            max-width: 400px;
+            margin: 20px auto;
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .quiz-complete-summary {
+            text-align: left;
+            max-width: 600px;
+            margin: 20px auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .summary-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .summary-correct {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .summary-incorrect {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Fire Service Study Tool</h1>
+        <p class="subtitle">Test 1 Review - 106 Questions</p>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="switchMode('home')">🏠 Home</button>
+            <button class="mode-btn" onclick="switchMode('quiz')">📝 Quiz Mode</button>
+            <button class="mode-btn" onclick="switchMode('flashcard')">🎴 Flashcards</button>
+        </div>
+
+        <!-- Home Section -->
+        <div id="home-section" class="section active">
+            <div class="start-screen">
+                <p>Welcome to your comprehensive study tool for the Fire Service Test 1 Review!</p>
+                
+                <ul class="feature-list">
+                    <li><strong>Quiz Mode:</strong> Multiple choice questions with instant feedback</li>
+                    <li><strong>Flashcard Mode:</strong> Study with interactive flashcards</li>
+                    <li><strong>Smart Decks:</strong> Cards you're unsure about go to a separate deck</li>
+                    <li><strong>Master Cards:</strong> Move cards back when you're confident</li>
+                    <li><strong>Progress Tracking:</strong> Monitor your learning</li>
+                </ul>
+
+                <p style="margin-top: 30px; font-size: 1em;">Select a mode above to begin studying!</p>
+                
+                <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <h3>📊 Your Progress</h3>
+                    <p>Mastered Cards: <span id="mastered-count">0</span> / 106</p>
+                    <p>Need Practice: <span id="practice-count">0</span></p>
+                    <p>Quiz Score: <span id="quiz-stats">Not taken yet</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="section">
+            <div class="chapter-filter">
+                <select class="chapter-select" id="quiz-chapter-filter" onchange="filterQuizChapter()">
+                    <option value="all">All Chapters</option>
+                    <option value="22">Chapter 22: Incident Command System (46 questions)</option>
+                    <option value="24">Chapter 24: Detection & Control Systems (46 questions)</option>
+                    <option value="ifsta">IFSTA Chapter 6: Maintenance and Testing (14 questions)</option>
+                </select>
+            </div>
+
+            <div class="quiz-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="quiz-progress" style="width: 0%"></div>
+                </div>
+                <div class="question-counter" id="quiz-counter">Question 1 of 106</div>
+                
+                <div class="question" id="quiz-question"></div>
+                
+                <div class="options-container" id="options-container"></div>
+                
+                <div class="feedback" id="quiz-feedback"></div>
+
+                <div class="btn-group" id="quiz-controls" style="display: none;">
+                    <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+                    <button class="btn btn-secondary" onclick="skipQuestion()">Skip</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="correct-count">0</div>
+                        <div class="stat-label">Correct</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="incorrect-count">0</div>
+                        <div class="stat-label">Incorrect</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="accuracy">0%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-secondary" onclick="resetQuiz()">Restart Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcard Section -->
+        <div id="flashcard-section" class="section">
+            <div class="instructions">
+                <strong>How it works:</strong> Click card to flip • Use buttons to sort into decks
+            </div>
+
+            <div class="chapter-filter">
+                <select class="chapter-select" id="flashcard-chapter-filter" onchange="filterFlashcardChapter()">
+                    <option value="all">All Chapters</option>
+                    <option value="22">Chapter 22: Incident Command System</option>
+                    <option value="24">Chapter 24: Detection & Control Systems</option>
+                    <option value="ifsta">IFSTA Chapter 6: Maintenance and Testing</option>
+                </select>
+            </div>
+
+            <div class="deck-tabs">
+                <button class="deck-tab active" onclick="switchDeck('main')">
+                    Main Deck <span class="count" id="main-count">106</span>
+                </button>
+                <button class="deck-tab" onclick="switchDeck('practice')">
+                    Need Practice <span class="count" id="practice-deck-count">0</span>
+                </button>
+                <button class="deck-tab" onclick="switchDeck('mastered')">
+                    Mastered <span class="count" id="mastered-deck-count">0</span>
+                </button>
+            </div>
+
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="flashcard-face flashcard-front">
+                        <div class="flashcard-number" id="card-number">1/106</div>
+                        <div class="flashcard-question" id="card-question"></div>
+                        <div class="flashcard-hint">Click to reveal answer</div>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="flashcard-number" id="card-number-back">1/106</div>
+                        <div class="flashcard-answer" id="card-answer"></div>
+                        <div class="flashcard-hint">Click to see question</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn btn-dont-know" onclick="moveToPractice()">
+                    ❌ Don't Know<br><small>Move to Practice</small>
+                </button>
+                <button class="control-btn btn-unsure" onclick="keepInCurrent()">
+                    🤔 Unsure<br><small>Keep Here</small>
+                </button>
+                <button class="control-btn btn-know" onclick="moveToMastered()">
+                    ✅ Know It!<br><small>Move to Mastered</small>
+                </button>
+            </div>
+
+            <div class="study-complete" id="study-complete">
+                <h2>🎉 Deck Complete!</h2>
+                <p id="complete-message"></p>
+                <button class="btn btn-primary" onclick="resetCurrentDeck()">Study This Deck Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Question Data
+        const questions = [
+            // Chapter 22: Incident Command System (1-46)
+            {id: 1, chapter: "22", question: "A(n) _______, which includes information such as where and when the incident occurred, should be completed each time a fire department unit responds to an incident.", answer: "incident report"},
+            {id: 2, chapter: "22", question: "A _______ is a group of people who are assigned to a specific apparatus and who have specific responsibilities at an emergency scene under the command of the company officer.", answer: "company"},
+            {id: 3, chapter: "22", question: "The _______ is responsible for gathering incident information and releasing it to the news media and other agencies through social media.", answer: "public information officer"},
+            {id: 4, chapter: "22", question: "The primary reason for establishing groups and divisions is to maintain an effective _______.", answer: "span of control"},
+            {id: 5, chapter: "22", question: "The rank-based hierarchical structure that creates an orderly line of authority is referred to as _______.", answer: "chain of command"},
+            {id: 6, chapter: "22", question: "The _______ functions as the representative of command to coordinate with representatives from assisting and cooperating agencies.", answer: "liaison officer"},
+            {id: 7, chapter: "22", question: "_______ is the only position in the ICS that must be filled at every incident.", answer: "Incident command"},
+            {id: 8, chapter: "22", question: "Organizations in the United States begin to move toward a standardized method of managing incidents in the _______.", answer: "early 1970s, after several large-scale wildland fires in California"},
+            {id: 9, chapter: "22", question: "A _______ refers to companies and/or crews working on the same task or function, although not necessarily in the same location.", answer: "group"},
+            {id: 10, chapter: "22", question: "The _______ is command's point of contact for representatives from assisting and cooperating agencies.", answer: "liaison officer"},
+            {id: 11, chapter: "22", question: "The side of a building designated as the _______ side is considered the tactical side.", answer: "ALPHA"},
+            {id: 12, chapter: "22", question: "_______ are the events and outcomes that can be reasonably assumed, predicted or anticipated based on facts, observations, common sense or previous experiences.", answer: "PROBABILITIES"},
+            {id: 13, chapter: "22", question: "Once life safety is ensured and the incident is stabilized, actions can be taken for _______.", answer: "CONSERVING PROPERTY"},
+            {id: 14, chapter: "22", question: "The _______ is the location where resources are placed while waiting for tactical assignment.", answer: "STAGING AREA"},
+            {id: 15, chapter: "22", question: "Firefighters working inside a building are divided into division based on the floor they are working. For example, crews on 5th floor would be Division 5 and the Radio designation for the officer assigned to that area would be _______.", answer: "DIVISION 5"},
+            {id: 16, chapter: "22", question: "The individual who initially established command must formally announce that fact _______.", answer: "OVER THE RADIO"},
+            {id: 17, chapter: "22", question: "A _______ is a specific term that identifies a team of two or more firefighters working to accomplish a specific task without an apparatus.", answer: "CREW"},
+            {id: 18, chapter: "22", question: "_______ is the rapid evaluation and analysis of an incident to determine which resources need to be deployed and which actions can be undertaken safely.", answer: "SIZE UP"},
+            {id: 19, chapter: "22", question: "The general staff positions within the ICS are _______.", answer: "FLOP (Finance, Logistics, Operations, Planning)"},
+            {id: 20, chapter: "22", question: "Size-up relies on two basic categories of information, which are _______.", answer: "FACTS AND PROBABILITIES"},
+            {id: 21, chapter: "22", question: "The _______ section is not staffed at most incidents because cost and accounting issues are typically addressed after the incident.", answer: "Administration (Finance/Administration)"},
+            {id: 22, chapter: "22", question: "The NIMS _______ course provides an overview of the ICS along with its history and organizational structure.", answer: "IS-100"},
+            {id: 23, chapter: "22", question: "The _______ is a formal system with defined roles and responsibilities for handling unexpected or emergency incidents.", answer: "Incident Management System"},
+            {id: 24, chapter: "22", question: "The U.S. Department of Homeland Security developed the _______ to provide a consistent, nationwide framework for incident management based partly on the previous work done by the fire service in developing the ICS.", answer: "National Incident Management System (NIMS)"},
+            {id: 25, chapter: "22", question: "A _______ is an individual, a company, or a crew with an identified supervisor that can perform specific tasks at an incident or planned event.", answer: "single resource"},
+            {id: 26, chapter: "22", question: "A _______ refers to companies and/or crews working in the same geographic area.", answer: "Division"},
+            {id: 27, chapter: "22", question: "_______ is the concept that each person reports to only one direct supervisor, each supervisor answers to only one boss, and so on.", answer: "Unity of command"},
+            {id: 28, chapter: "22", question: "The liaison officer should set up their point of operations _______.", answer: "adjacent to, but not inside the incident command post"},
+            {id: 29, chapter: "22", question: "Key components of an effective Incident Command System include _______.", answer: "planning, delegation, supervision, and communication"},
+            {id: 30, chapter: "22", question: "_______ is considered a 'section' within the Incident Command System.", answer: "Planning"},
+            {id: 31, chapter: "22", question: "The exterior sides of a building are generally referred to and identified as _______.", answer: "Sides A, B, C, and D (Alpha, Bravo, Charlie, Delta)"},
+            {id: 32, chapter: "22", question: "A(n) _______ directly supervises a small crew of firefighters, such as an engine company or ladder company.", answer: "company officer"},
+            {id: 33, chapter: "22", question: "The acronym _______, created by Chief Lloyd Layman can be used by fire departments to achieve the three incident priorities.", answer: "RECEO"},
+            {id: 34, chapter: "22", question: "The maximum number of individuals or resources that one person can supervise or manage effectively is the _______.", answer: "span of control"},
+            {id: 35, chapter: "22", question: "The 'C' in the acronym RECEO stands for _______.", answer: "confinement of the fire"},
+            {id: 36, chapter: "22", question: "At a minimum, the _______ of any involved persons should be recorded in an incident report.", answer: "name, birthdate, address, and telephone number"},
+            {id: 37, chapter: "22", question: "_______ is a risk-benefit analysis that weighs the viability and survivability of potential victims based on the current conditions in the structure.", answer: "Survivability profiling"},
+            {id: 38, chapter: "22", question: "Most fire departments operate within a(n) _______ command structure with various ranks of authority and responsibility.", answer: "paramilitary-style"},
+            {id: 39, chapter: "22", question: "The _______ section is responsible for providing supplies, services, facilities, and materials during an incident.", answer: "logistics"},
+            {id: 40, chapter: "22", question: "The mnemonic _______ provides guidance for initial engine company operations upon arrival at a structure fire scene.", answer: "S.L.I.C.E.--R.S."},
+            {id: 41, chapter: "22", question: "Personnel functioning within the _______ section perform tactical operations such as fighting the fire, rescuing trapped individuals, and treating injured victims.", answer: "operations"},
+            {id: 42, chapter: "22", question: "The _______ section is responsible for taking direct action to control the incident.", answer: "operations"},
+            {id: 43, chapter: "22", question: "_______ are events and outcomes that can be reasonably assumed, predicted, or anticipated based on facts, observations, common sense, and previous experiences.", answer: "Probabilities"},
+            {id: 44, chapter: "22", question: "A(n) _______ creates a single set of incident goals and objectives and fosters mutual communication and cooperation among agencies.", answer: "Unified command"},
+            {id: 45, chapter: "22", question: "The military alphabet word _______ is used to describe the front of a building.", answer: "Alpha"},
+            {id: 46, chapter: "22", question: "Groups and divisions place several single resources under one leader designated the _______.", answer: "Division supervisor"},
+
+            // Chapter 24: Detection & Control Systems (47-92)
+            {id: 47, chapter: "24", question: "In older systems; when the sprinkler system is activated, the main alarm valve opens, water is fed through the pipes, then the _______ activates to notify people outside the building that water is flowing.", answer: "water-motor gong"},
+            {id: 48, chapter: "24", question: "One type of active smoke control creates pressure differences between the fire area and areas around the fire area that are sometimes called a(n) _______.", answer: "pressure sandwich"},
+            {id: 49, chapter: "24", question: "Most of North America follows the applicable _______ standards and codes for fire protection systems.", answer: "NFPA"},
+            {id: 50, chapter: "24", question: "Compared to commercial sprinkler systems, residential sprinkler systems _______.", answer: "use smaller, quicker activating heads"},
+            {id: 51, chapter: "24", question: "_______ describes the minimum standards for automatic sprinkler systems.", answer: "NFPA 13"},
+            {id: 52, chapter: "24", question: "A(n) _______ water mist system exposes the system piping to pressures between 175 psi and 500 psi.", answer: "intermediate-pressure"},
+            {id: 53, chapter: "24", question: "Supervising station alarm systems communicate between the protected property and the fire department or a monitoring location staffed 24 hours per day and are available in three types---remote, proprietary, and _______.", answer: "central station"},
+            {id: 54, chapter: "24", question: "When the air pressure in a(n) _______ drops, the water pressure opens the deluge valve to the deluge system.", answer: "pilot line"},
+            {id: 55, chapter: "24", question: "Spare sprinkler heads that match those in the system should be kept in a(n) _______.", answer: "head box"},
+            {id: 56, chapter: "24", question: "Systems with a(n) _______ delay sounding the alarm for 30 to 60 seconds after an initiating device activates.", answer: "alarm verification feature"},
+            {id: 57, chapter: "24", question: "_______ standpipe systems provide adequate volume and pressure at the hose valve at all times.", answer: "AUTOMATIC WET"},
+            {id: 58, chapter: "24", question: "A _______ is an audible tone and/or flashing lights that indicate that the alarm was activated.", answer: "FIRE ALARM SIGNAL"},
+            {id: 59, chapter: "24", question: "A _______ contains a sensor called a photocell that detects light and an LED light that emits a straight beam of light across the sensing chamber.", answer: "PHOTOELECTRIC SMOKE DETECTOR"},
+            {id: 60, chapter: "24", question: "NFPA _______ is the National Fire Alarm and Signaling Code.", answer: "72"},
+            {id: 61, chapter: "24", question: "A _______ system is listed and approved for complete fire extinguishment.", answer: "WATER MIST SYSTEM"},
+            {id: 62, chapter: "24", question: "_______ standpipe system is designed for use by fire department personnel only.", answer: "CLASS I"},
+            {id: 63, chapter: "24", question: "A _______ water mist system exposes the system piping to pressures between 175 psi and 500 psi.", answer: "INTERMEDIATE-PRESSURE"},
+            {id: 64, chapter: "24", question: "An example of a _______ detector that activates when the temperature of a room increases more than 12 degrees F in one minute.", answer: "RATE-OF-RISE"},
+            {id: 65, chapter: "24", question: "In a frangible bulb automatic sprinkler, _______ indicates the highest temperature rating.", answer: "BLACK"},
+            {id: 66, chapter: "24", question: "A _______ is often installed in areas where computers or sensitive electronic equipment is used or where valuable documents are stored.", answer: "gaseous suppression system"},
+            {id: 67, chapter: "24", question: "_______ controls fire alarm systems that operate other building functions such as electromagnetic doors, air handling units, and elevators.", answer: "Emergency control function interface"},
+            {id: 68, chapter: "24", question: "_______ continuously capture air samples and measure the concentrations of specific gases or products of combustion.", answer: "Air sampling type detectors"},
+            {id: 69, chapter: "24", question: "_______ extinguishing agents interrupt the chemical reaction between fuel and oxygen.", answer: "Halogenated"},
+            {id: 70, chapter: "24", question: "Proper documentation for every fire protection system test should be kept for _______.", answer: "1 year past the date of the next test"},
+            {id: 71, chapter: "24", question: "A(n) _______ smoke detector works on the principle that burning materials release many different products of combustion, including electrically charged microscopic particles.", answer: "Ionization"},
+            {id: 72, chapter: "24", question: "A _______ is the most common and least expensive type of automatic sprinkler system.", answer: "wet pipe sprinkler system"},
+            {id: 73, chapter: "24", question: "A(n) _______ speeds up the removal of air from a dry pipe system.", answer: "Accelerator"},
+            {id: 74, chapter: "24", question: "In most cases, _______ sprinklers need to activate to control a fire.", answer: "At least one or two"},
+            {id: 75, chapter: "24", question: "A(n) _______ standpipe system does not have a permanent connection to a water supply, so the FDC must be connected to the pump on the engine to pump water into the system.", answer: "manual dry"},
+            {id: 76, chapter: "24", question: "A(n) _______ indicates the fire alarm is not operating properly.", answer: "trouble signal"},
+            {id: 77, chapter: "24", question: "Automatic sprinkler systems include sprinkler heads, piping and fittings, valves, water supply, and _______.", answer: "waterflow alarm"},
+            {id: 78, chapter: "24", question: "_______ requires someone from within the facility to call 911 when the fire alarm system activates.", answer: "Protected premises fire alarm system"},
+            {id: 79, chapter: "24", question: "If a hose line is connected to an outlet without a _______, the water pressure could rupture the hose.", answer: "flow restrictor"},
+            {id: 80, chapter: "24", question: "A(n) _______ is a display that contains one or more indicator lamps, alphanumeric displays, or other means to provide status information about a circuit, condition, or location that activated the alarm so that responding fire personnel know what actions to take.", answer: "annunciator"},
+            {id: 81, chapter: "24", question: "An ESFR is most likely to be used in a(n) _______.", answer: "large warehouse"},
+            {id: 82, chapter: "24", question: "Discharge of a _______ system is usually delayed 30 to 60 seconds after the detector is activated to allow workers to evacuate the area.", answer: "clean agent"},
+            {id: 83, chapter: "24", question: "The _______ displays OPEN or SHUT to indicate the position of the valve.", answer: "Post indicator valve (PIV)"},
+            {id: 84, chapter: "24", question: "Deluge systems are most likely to be used in _______.", answer: "aircraft hangars"},
+            {id: 85, chapter: "24", question: "An OS&Y indicator valve is open when the _______.", answer: "stem is out"},
+            {id: 86, chapter: "24", question: "Each outlet in _______ standpipe has a 2½-in. male coupling and a valve to open the water supply after the attack line is connected.", answer: "Class I"},
+            {id: 87, chapter: "24", question: "A _______ is a heat detector that activates when the temperature of the surrounding air increases by more than a set amount in a given period of time.", answer: "rate-of-rise detector"},
+            {id: 88, chapter: "24", question: "A _______ requires two or more initiating devices to activate before the alarm sounds.", answer: "cross-zoned system"},
+            {id: 89, chapter: "24", question: "The _______ has a threaded stem that moves in and out as the valve is opened or closed.", answer: "OS&Y valve"},
+            {id: 90, chapter: "24", question: "_______ standpipe is for use by specially trained building occupants or firefighters to attack fires at the incipient stage only.", answer: "Class II"},
+            {id: 91, chapter: "24", question: "The sprinkler system _______ valve is used to prevent nuisance alarms caused by pressure variations and surges in the water supply system.", answer: "alarm"},
+            {id: 92, chapter: "24", question: "A _______ has pressurized water in the system that discharges when activated.", answer: "sprinkler system"},
+
+            // IFSTA Chapter 6: Maintenance and Testing (93-106)
+            {id: 93, chapter: "ifsta", question: "What is an indicator that a hose should be removed from service?", answer: "BLISTER ON THE HOSE JACKET (also leaks, coupling loosening or separating, hose rupturing or bursting)"},
+            {id: 94, chapter: "ifsta", question: "Which statement is true of cleaning fire equipment?", answer: "PERSONNEL SHOULD CONSULT THE SAFETY DATA SHEET (SDS) WHEN USING SOLVENTS"},
+            {id: 95, chapter: "ifsta", question: "The ideal fire hose test site should be _______.", answer: "PAVED WITH A SLIGHT GRADE"},
+            {id: 96, chapter: "ifsta", question: "When should power tools be inspected?", answer: "AT THE BEGINNING OF EACH WORK SHIFT"},
+            {id: 97, chapter: "ifsta", question: "Inspection and maintenance of a power plant or electrical generator include: _______.", answer: "REPLACING THE SPARK PLUG IF IT IS DAMAGED"},
+            {id: 98, chapter: "ifsta", question: "When would a fire service hose need to be tested?", answer: "ANNUALLY, AFTER REPAIRS OR AFTER A VEHICLE HAS RUN OVER THE HOSE"},
+            {id: 99, chapter: "ifsta", question: "Maintenance of power rescue tools includes: _______.", answer: "KEEP BATTERY PACKS FULLY CHARGED"},
+            {id: 100, chapter: "ifsta", question: "Deep-cycle batteries: _______.", answer: "ARE DESIGNED TO BE FULLY DISCHARGED BEFORE THEY ARE CHARGED AGAIN"},
+            {id: 101, chapter: "ifsta", question: "When pressurizing a hose for testing, firefighters should: _______.", answer: "LAY THE HOSE FLAT ON THE GROUND BEFORE CHARGING IT"},
+            {id: 102, chapter: "ifsta", question: "When using a fire department pumper for hose testing the hose should be connected on the _______.", answer: "SIDE OF THE APPARATUS OPPOSITE THE PUMP PANEL"},
+            {id: 103, chapter: "ifsta", question: "What information should be kept in fire hose records?", answer: "DATE AND RESULTS OF PERIODIC TESTING"},
+            {id: 104, chapter: "ifsta", question: "Which statement is true of conducting fire hose test?", answer: "ANY HOSE TESTS SHOULD BE RECORDED AND DOCUMENTED"},
+            {id: 105, chapter: "ifsta", question: "What is a maintenance responsibility of a Firefighter II?", answer: "Documenting maintenance on appropriate forms or records"},
+            {id: 106, chapter: "ifsta", question: "When conducting maintenance of portable lighting equipment, firefighters should: _______.", answer: "inspect all electrical cords for damage"}
+        ];
+
+        // State Management
+        let quizState = {
+            currentIndex: 0,
+            filteredQuestions: [],
+            correct: 0,
+            incorrect: 0,
+            answers: [],
+            currentOptions: [],
+            answered: false
+        };
+
+        let flashcardState = {
+            mainDeck: [],
+            practiceDeck: [],
+            masteredDeck: [],
+            currentDeck: 'main',
+            currentIndex: 0,
+            filteredChapter: 'all'
+        };
+
+        // Initialize
+        function init() {
+            const saved = localStorage.getItem('fireServiceStudy');
+            if (saved) {
+                const data = JSON.parse(saved);
+                flashcardState.practiceDeck = data.practiceDeck || [];
+                flashcardState.masteredDeck = data.masteredDeck || [];
+            }
+            updateMainDeck();
+            updateStats();
+        }
+
+        function saveProgress() {
+            const data = {
+                practiceDeck: flashcardState.practiceDeck,
+                masteredDeck: flashcardState.masteredDeck
+            };
+            localStorage.setItem('fireServiceStudy', JSON.stringify(data));
+            updateStats();
+        }
+
+        function updateMainDeck() {
+            const otherIds = [...flashcardState.practiceDeck, ...flashcardState.masteredDeck].map(q => q.id);
+            flashcardState.mainDeck = questions.filter(q => !otherIds.includes(q.id));
+        }
+
+        function updateStats() {
+            document.getElementById('mastered-count').textContent = flashcardState.masteredDeck.length;
+            document.getElementById('practice-count').textContent = flashcardState.practiceDeck.length;
+            document.getElementById('main-count').textContent = flashcardState.mainDeck.length;
+            document.getElementById('practice-deck-count').textContent = flashcardState.practiceDeck.length;
+            document.getElementById('mastered-deck-count').textContent = flashcardState.masteredDeck.length;
+        }
+
+        // Mode Switching
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            if (mode === 'home') {
+                document.getElementById('home-section').classList.add('active');
+                updateStats();
+            } else if (mode === 'quiz') {
+                document.getElementById('quiz-section').classList.add('active');
+                resetQuiz();
+            } else if (mode === 'flashcard') {
+                document.getElementById('flashcard-section').classList.add('active');
+                showCurrentCard();
+            }
+        }
+
+        // Quiz Functions - MULTIPLE CHOICE
+        function filterQuizChapter() {
+            const chapter = document.getElementById('quiz-chapter-filter').value;
+            if (chapter === 'all') {
+                quizState.filteredQuestions = shuffleArray([...questions]);
+            } else {
+                const chapterQuestions = questions.filter(q => q.chapter === chapter);
+                quizState.filteredQuestions = shuffleArray([...chapterQuestions]);
+            }
+            quizState.currentIndex = 0;
+            quizState.correct = 0;
+            quizState.incorrect = 0;
+            quizState.answers = [];
+            quizState.answered = false;
+            updateQuizDisplay();
+        }
+
+        function resetQuiz() {
+            filterQuizChapter();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateOptions(correctAnswer, currentQuestion) {
+            // Get all other answers from the same chapter for plausible distractors
+            const sameChapter = questions.filter(q => 
+                q.chapter === currentQuestion.chapter && 
+                q.id !== currentQuestion.id
+            );
+            
+            // Get random distractors from same chapter
+            const distractors = shuffleArray([...sameChapter])
+                .slice(0, 10)
+                .map(q => q.answer);
+            
+            // If not enough in chapter, get from other chapters
+            let allDistractors = [...distractors];
+            if (allDistractors.length < 3) {
+                const otherChapters = questions.filter(q => q.chapter !== currentQuestion.chapter);
+                const moreDistractors = shuffleArray([...otherChapters])
+                    .slice(0, 3 - allDistractors.length)
+                    .map(q => q.answer);
+                allDistractors = [...allDistractors, ...moreDistractors];
+            }
+            
+            // Select 3 unique distractors that aren't too similar to correct answer
+            const selectedDistractors = [];
+            const correctLower = correctAnswer.toLowerCase();
+            
+            for (const distractor of allDistractors) {
+                if (selectedDistractors.length >= 3) break;
+                
+                // Avoid distractors that are substrings of correct answer or vice versa
+                const distractorLower = distractor.toLowerCase();
+                const isTooSimilar = distractorLower.includes(correctLower) || 
+                                    correctLower.includes(distractorLower) ||
+                                    calculateSimilarity(distractorLower, correctLower) > 0.6;
+                
+                if (!isTooSimilar && !selectedDistractors.includes(distractor)) {
+                    selectedDistractors.push(distractor);
+                }
+            }
+            
+            // If still not enough, generate some generic alternatives
+            const genericOptions = [
+                "None of the above",
+                "All of the above",
+                "Not specified in the text"
+            ];
+            
+            while (selectedDistractors.length < 3) {
+                const generic = genericOptions[selectedDistractors.length];
+                if (!selectedDistractors.includes(generic)) {
+                    selectedDistractors.push(generic);
+                }
+            }
+            
+            // Combine and shuffle
+            const options = [correctAnswer, ...selectedDistractors.slice(0, 3)];
+            return shuffleArray(options);
+        }
+
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            if (longer.length === 0) return 1.0;
+            const distance = levenshteinDistance(longer, shorter);
+            return (longer.length - distance) / longer.length;
+        }
+
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i-1) === str1.charAt(j-1)) {
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j-1] + 1,
+                            Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1)
+                        );
+                    }
+                }
+            }
+            return matrix[str2.length][str1.length];
+        }
+
+        function updateQuizDisplay() {
+            if (quizState.currentIndex >= quizState.filteredQuestions.length) {
+                showQuizComplete();
+                return;
+            }
+
+            const q = quizState.filteredQuestions[quizState.currentIndex];
+            const progress = ((quizState.currentIndex / quizState.filteredQuestions.length) * 100).toFixed(0);
+            
+            document.getElementById('quiz-progress').style.width = progress + '%';
+            document.getElementById('quiz-counter').textContent = 
+                `Question ${quizState.currentIndex + 1} of ${quizState.filteredQuestions.length}`;
+            
+            // Format question with blank
+            const formattedQ = q.question.replace('_______', '<span class="blank">_______</span>');
+            document.getElementById('quiz-question').innerHTML = formattedQ;
+            
+            // Generate multiple choice options
+            quizState.currentOptions = generateOptions(q.answer, q);
+            quizState.answered = false;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            quizState.currentOptions.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="option-letter">${letters[index]}</span> ${option}`;
+                btn.onclick = () => selectOption(index);
+                optionsContainer.appendChild(btn);
+            });
+            
+            document.getElementById('quiz-feedback').style.display = 'none';
+            document.getElementById('quiz-controls').style.display = 'none';
+            
+            updateQuizStats();
+        }
+
+        function selectOption(selectedIndex) {
+            if (quizState.answered) return;
+            
+            quizState.answered = true;
+            const q = quizState.filteredQuestions[quizState.currentIndex];
+            const correctIndex = quizState.currentOptions.findIndex(opt => opt === q.answer);
+            const isCorrect = selectedIndex === correctIndex;
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            // Mark selected button
+            if (isCorrect) {
+                buttons[selectedIndex].classList.add('selected-correct');
+                quizState.correct++;
+            } else {
+                buttons[selectedIndex].classList.add('selected-incorrect');
+                buttons[correctIndex].classList.add('show-correct');
+                quizState.incorrect++;
+            }
+            
+            // Disable all buttons
+            buttons.forEach(btn => btn.classList.add('disabled'));
+            
+            // Show feedback
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.style.display = 'block';
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `<strong>✓ Correct!</strong><br>The answer is: ${q.answer}`;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `<strong>✗ Incorrect</strong><br>You selected: ${quizState.currentOptions[selectedIndex]}<br>Correct answer: ${q.answer}`;
+            }
+            
+            quizState.answers.push({
+                question: q.question,
+                userAnswer: quizState.currentOptions[selectedIndex],
+                correctAnswer: q.answer,
+                isCorrect: isCorrect
+            });
+            
+            updateQuizStats();
+            
+            // Show next button
+            document.getElementById('quiz-controls').style.display = 'flex';
+            
+            // Auto advance after 2 seconds if correct, 3 seconds if incorrect
+            const delay = isCorrect ? 2000 : 3000;
+            setTimeout(() => {
+                if (quizState.answered) {
+                    nextQuestion();
+                }
+            }, delay);
+        }
+
+        function nextQuestion() {
+            quizState.currentIndex++;
+            updateQuizDisplay();
+        }
+
+        function skipQuestion() {
+            quizState.currentIndex++;
+            updateQuizDisplay();
+        }
+
+        function updateQuizStats() {
+            document.getElementById('correct-count').textContent = quizState.correct;
+            document.getElementById('incorrect-count').textContent = quizState.incorrect;
+            const total = quizState.correct + quizState.incorrect;
+            const accuracy = total > 0 ? ((quizState.correct / total) * 100).toFixed(0) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function showQuizComplete() {
+            const container = document.querySelector('.quiz-container');
+            const accuracy = ((quizState.correct / quizState.filteredQuestions.length) * 100).toFixed(1);
+            
+            let summaryHTML = '';
+            quizState.answers.forEach((ans, idx) => {
+                const className = ans.isCorrect ? 'summary-correct' : 'summary-incorrect';
+                const icon = ans.isCorrect ? '✓' : '✗';
+                summaryHTML += `
+                    <div class="summary-item ${className}">
+                        <strong>${icon} Q${idx + 1}:</strong> ${ans.question.substring(0, 80)}...<br>
+                        <small>Your answer: ${ans.userAnswer.substring(0, 50)} | Correct: ${ans.correctAnswer.substring(0, 50)}</small>
+                    </div>
+                `;
+            });
+            
+            let html = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #28a745; margin-bottom: 20px;">Quiz Complete! 🎉</h2>
+                    <div style="font-size: 3em; margin-bottom: 20px;">${accuracy}%</div>
+                    <p style="font-size: 1.2em; margin-bottom: 30px;">
+                        You got ${quizState.correct} out of ${quizState.filteredQuestions.length} correct
+                    </p>
+                    <button class="btn btn-primary" onclick="resetQuiz()" style="margin-bottom: 20px;">Take Quiz Again</button>
+                    <button class="btn btn-secondary" onclick="switchMode('flashcard')" style="margin-left: 10px;">Study Flashcards</button>
+                    
+                    <div style="margin-top: 30px; text-align: left;">
+                        <h3 style="margin-bottom: 15px;">Review Your Answers:</h3>
+                        <div class="quiz-complete-summary">
+                            ${summaryHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Update home stats
+            document.getElementById('quiz-stats').textContent = `${accuracy}% (${quizState.correct}/${quizState.filteredQuestions.length})`;
+        }
+
+        // Flashcard Functions
+        function filterFlashcardChapter() {
+            flashcardState.filteredChapter = document.getElementById('flashcard-chapter-filter').value;
+            flashcardState.currentIndex = 0;
+            showCurrentCard();
+        }
+
+        function getCurrentDeckArray() {
+            let deck;
+            switch(flashcardState.currentDeck) {
+                case 'practice': deck = flashcardState.practiceDeck; break;
+                case 'mastered': deck = flashcardState.masteredDeck; break;
+                default: deck = flashcardState.mainDeck;
+            }
+            
+            if (flashcardState.filteredChapter !== 'all') {
+                return deck.filter(q => q.chapter === flashcardState.filteredChapter);
+            }
+            return deck;
+        }
+
+        function showCurrentCard() {
+            const deck = getCurrentDeckArray();
+            const card = document.getElementById('flashcard');
+            const completeMsg = document.getElementById('study-complete');
+            
+            if (deck.length === 0) {
+                card.style.display = 'none';
+                document.querySelector('.controls').style.display = 'none';
+                completeMsg.style.display = 'block';
+                
+                let msg = '';
+                if (flashcardState.currentDeck === 'main') {
+                    msg = 'All cards have been sorted! Check your Practice or Mastered decks.';
+                } else if (flashcardState.currentDeck === 'practice') {
+                    msg = 'Great job reviewing! Keep studying these cards until you\'re confident.';
+                } else {
+                    msg = 'Excellent! You\'ve mastered all these cards!';
+                }
+                document.getElementById('complete-message').textContent = msg;
+                return;
+            }
+            
+            card.style.display = 'block';
+            document.querySelector('.controls').style.display = 'flex';
+            completeMsg.style.display = 'none';
+            card.classList.remove('flipped');
+            
+            const q = deck[flashcardState.currentIndex % deck.length];
+            const total = deck.length;
+            const current = (flashcardState.currentIndex % total) + 1;
+            
+            document.getElementById('card-number').textContent = `${current}/${total}`;
+            document.getElementById('card-number-back').textContent = `${current}/${total}`;
+            document.getElementById('card-question').textContent = q.question;
+            document.getElementById('card-answer').textContent = q.answer;
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function switchDeck(deckName) {
+            flashcardState.currentDeck = deckName;
+            flashcardState.currentIndex = 0;
+            
+            document.querySelectorAll('.deck-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (deckName === 'main') updateMainDeck();
+            
+            showCurrentCard();
+            updateStats();
+        }
+
+        function moveToPractice() {
+            const deck = getCurrentDeckArray();
+            if (deck.length === 0) return;
+            
+            const card = deck[flashcardState.currentIndex % deck.length];
+            
+            removeFromCurrentDeck(card);
+            
+            if (!flashcardState.practiceDeck.find(q => q.id === card.id)) {
+                flashcardState.practiceDeck.push(card);
+            }
+            
+            saveProgress();
+            showCurrentCard();
+        }
+
+        function moveToMastered() {
+            const deck = getCurrentDeckArray();
+            if (deck.length === 0) return;
+            
+            const card = deck[flashcardState.currentIndex % deck.length];
+            
+            removeFromCurrentDeck(card);
+            
+            if (!flashcardState.masteredDeck.find(q => q.id === card.id)) {
+                flashcardState.masteredDeck.push(card);
+            }
+            
+            saveProgress();
+            showCurrentCard();
+        }
+
+        function keepInCurrent() {
+            flashcardState.currentIndex++;
+            showCurrentCard();
+        }
+
+        function removeFromCurrentDeck(card) {
+            switch(flashcardState.currentDeck) {
+                case 'practice':
+                    flashcardState.practiceDeck = flashcardState.practiceDeck.filter(q => q.id !== card.id);
+                    break;
+                case 'mastered':
+                    flashcardState.masteredDeck = flashcardState.masteredDeck.filter(q => q.id !== card.id);
+                    break;
+                default:
+                    flashcardState.mainDeck = flashcardState.mainDeck.filter(q => q.id !== card.id);
+            }
+        }
+
+        function resetCurrentDeck() {
+            if (flashcardState.currentDeck === 'main') {
+                flashcardState.mainDeck = [...questions];
+                flashcardState.practiceDeck = [];
+                flashcardState.masteredDeck = [];
+            } else if (flashcardState.currentDeck === 'practice') {
+                flashcardState.mainDeck = [...flashcardState.mainDeck, ...flashcardState.practiceDeck];
+                flashcardState.practiceDeck = [];
+            } else {
+                flashcardState.mainDeck = [...flashcardState.mainDeck, ...flashcardState.masteredDeck];
+                flashcardState.masteredDeck = [];
+            }
+            
+            flashcardState.currentIndex = 0;
+            saveProgress();
+            showCurrentCard();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('flashcard-section').classList.contains('active')) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    flipCard();
+                } else if (e.key === '1' || e.key === 'ArrowLeft') {
+                    moveToPractice();
+                } else if (e.key === '2' || e.key === 'ArrowDown') {
+                    keepInCurrent();
+                } else if (e.key === '3' || e.key === 'ArrowRight') {
+                    moveToMastered();
+                }
+            } else if (document.getElementById('quiz-section').classList.contains('active') && !quizState.answered) {
+                if (e.key === 'a' || e.key === 'A') selectOption(0);
+                else if (e.key === 'b' || e.key === 'B') selectOption(1);
+                else if (e.key === 'c' || e.key === 'C') selectOption(2);
+                else if (e.key === 'd' || e.key === 'D') selectOption(3);
+            }
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
